@@ -13,8 +13,23 @@ const PORT = process.env.PORT || 3000;
 // Connect to MongoDB
 connectDB();
 
+// ✅ CORS Configuration
+const allowedOrigins = [
+  "https://votting-frontend.vercel.app", // frontend (Vercel)
+  "http://localhost:3000" // local dev (optional)
+];
+
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
+}));
+
+// Handle preflight OPTIONS requests
+app.options("*", cors());
+
 // Middleware
-app.use(cors());
 app.use(express.json());
 
 // Routes
@@ -70,9 +85,7 @@ const notifyLiveResults = async () => {
             as: 'partyInfo'
           }
         },
-        {
-          $unwind: '$partyInfo'
-        },
+        { $unwind: '$partyInfo' },
         {
           $project: {
             _id: 0,
@@ -82,9 +95,7 @@ const notifyLiveResults = async () => {
             voteCount: 1
           }
         },
-        {
-          $sort: { voteCount: -1 }
-        }
+        { $sort: { voteCount: -1 } }
       ]);
 
       const totalVotes = await Vote.countDocuments();
@@ -113,8 +124,8 @@ const notifyLiveResults = async () => {
 // Make notifyLiveResults available globally
 global.notifyLiveResults = notifyLiveResults;
 
-app.listen(PORT, () => {
-  console.log(`Voting app server running on http://localhost:${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`✅ Voting app server running on port ${PORT}`);
 });
 
 module.exports = app;
